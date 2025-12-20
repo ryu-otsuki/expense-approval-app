@@ -1,21 +1,45 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { mockRequests } from '~/mocks/requests'
-import type { Role, RequestStatus } from '~/domain/request'
-import { STATUS_LABEL, STATUS_TRANSITIONS } from '~/domain/request'
+import {
+  type Role,
+  type RequestStatus,
+  type ExpenseRequest,
+  STATUS_LABEL,
+  STATUS_TRANSITIONS,
+} from '~/domain/request'
 
+// 画面表示用の状態（モック）
+// ※ mockRequests をそのまま使うと「更新できない固定データ」になりがちなので、ref に入れる
+const requests = ref<ExpenseRequest[]>([...mockRequests])
+
+// ロール切り替え（モック）
 const currentRole = ref<Role>('applicant')
 
-/**
- * このstatusから、今のロールで遷移できる「次のstatus一覧」を返す
- * UIはここを通して "何ができるか" を決める
- */
+// UI で選べるようにしてる場合はこれを使う（任意）
+const roleLabel: Record<Role, string> = {
+  applicant: '申請者',
+  approver: '承認者',
+}
+
+// 次に遷移できるステータス一覧（ドメイン定義に従う）
 const getNextStatuses = (status: RequestStatus): readonly RequestStatus[] => {
   return STATUS_TRANSITIONS[currentRole.value][status]
 }
 
-// 今はモックなので処理はしない。挙動確認用。
+// クリックで「実際に status を更新」する（モック）
 const onClickTransition = (requestId: string, next: RequestStatus) => {
-  alert(`request=${requestId} を「${STATUS_LABEL[next]}」に変更（モック）`)
+  const target = requests.value.find((r) => r.id === requestId)
+  if (!target) return
+
+  // 不正遷移ガード（UI的にはボタンが出ない想定だが、念のため）
+  const allowed = getNextStatuses(target.status)
+  if (!allowed.includes(next)) {
+    alert('不正な状態遷移です（モック）')
+    return
+  }
+
+  target.status = next
 }
 </script>
 
@@ -23,23 +47,25 @@ const onClickTransition = (requestId: string, next: RequestStatus) => {
   <div>
     <h2>申請一覧</h2>
 
-    <!-- ロール切替（モック） -->
+    <!-- ロール切り替え（モック） -->
     <div style="margin: 12px 0;">
       <label style="margin-right: 8px;">ロール:</label>
       <select v-model="currentRole">
-        <option value="applicant">申請者</option>
-        <option value="approver">承認者</option>
+        <option value="applicant">{{ roleLabel.applicant }}</option>
+        <option value="approver">{{ roleLabel.approver }}</option>
       </select>
     </div>
 
     <ul style="padding-left: 16px;">
       <li
-        v-for="r in mockRequests"
+        v-for="r in requests"
         :key="r.id"
         style="margin-bottom: 16px;"
       >
         <div><strong>{{ r.title }}</strong></div>
+
         <div>金額: {{ r.amountYen.toLocaleString() }} 円</div>
+
         <div>状態: {{ STATUS_LABEL[r.status] }}</div>
         <div>作成日: {{ r.createdAt }}</div>
 
