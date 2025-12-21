@@ -8,7 +8,6 @@ export const useRequests = () => {
 
   const getById = (id: string) => requests.value.find(r => r.id === id)
 
-  // 追加：draft作成
   const createDraft = (input: { title: string; amountYen: number }) => {
     const now = new Date()
     const yyyy = now.getFullYear()
@@ -17,20 +16,18 @@ export const useRequests = () => {
     const createdAt = `${yyyy}-${mm}-${dd}`
 
     const newRequest: ExpenseRequest = {
-      id: crypto.randomUUID(), // Node/ブラウザ対応（NuxtならOKなことが多い）
+      id: crypto.randomUUID(),
       title: input.title,
       amountYen: input.amountYen,
       status: 'draft' satisfies RequestStatus,
       createdAt,
     }
 
-    // 一覧の先頭に追加（好みで末尾でもOK）
     requests.value = [newRequest, ...requests.value]
 
     return newRequest
   }
 
-  // 追加：（任意）状態更新もここに寄せるなら
   const updateStatus = (id: string, next: RequestStatus) => {
     const target = requests.value.find(r => r.id === id)
     if (!target) return false
@@ -38,11 +35,25 @@ export const useRequests = () => {
     return true
   }
 
+  const updateDraft = (
+  id: string,
+  input: { title: string; amountYen: number }
+) => {
+  const target = requests.value.find(r => r.id === id)
+  if (!target) return false
+  if (target.status !== 'draft') return false
+
+  target.title = input.title
+  target.amountYen = input.amountYen
+  return true
+}
+
   return {
-    requests,      // 直接触りたくなければ export しなくてもOK
+    requests,   
     getAll,
     getById,
     createDraft,
-    updateStatus,  // 任意
+    updateStatus, 
+    updateDraft,   
   }
 }
