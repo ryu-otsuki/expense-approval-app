@@ -1,19 +1,31 @@
 <script setup lang="ts">
-import { STATUS_LABEL, type RequestStatus, type Role } from '~/domain/request'
+import { computed, ref } from 'vue'
 import { useRequests } from '~/composables/useRequests'
+import {
+  STATUS_LABEL,
+  STATUS_TRANSITIONS,
+  type Role,
+  type RequestStatus,
+} from '~/domain/request'
 
+// ロール切り替え（MVPなのでセレクトで切替）
 const currentRole = ref<Role>('applicant')
 
-const { requests, updateStatus, getNextStatuses } = useRequests()
+// 申請データは composable から取得（UIはmockを直接触らない）
+const { getAll, updateStatus } = useRequests()
+const requests = computed(() => getAll())
 
-const nextStatuses = (status: RequestStatus): readonly RequestStatus[] => {
-  return getNextStatuses(currentRole.value, status)
+// 「このロール・この状態」から遷移できる次の状態一覧を返す
+const getNextStatuses = (status: RequestStatus): readonly RequestStatus[] => {
+  return STATUS_TRANSITIONS[currentRole.value][status]
 }
 
-// 今はモックなので alert + UI上の status 更新まで行う（APIは未接続）
+// 状態更新（今はモック：配列内のデータを書き換えるだけ）
 const onClickTransition = (requestId: string, next: RequestStatus) => {
-  updateStatus(requestId, next)
-  alert(`request=${requestId} を「${STATUS_LABEL[next]}」に変更（モック）`)
+  const ok = updateStatus(requestId, next)
+  if (!ok) {
+    alert(`対象の申請が見つかりませんでした（id=${requestId}）`)
+  }
 }
 </script>
 
@@ -21,6 +33,13 @@ const onClickTransition = (requestId: string, next: RequestStatus) => {
   <div>
     <h2>申請一覧</h2>
 
+    <!-- ナビ（パンくずではなく単純な導線） -->
+    <nav style="display: flex; gap: 12px; margin: 8px 0;">
+      <NuxtLink to="/">Home</NuxtLink>
+      <NuxtLink to="/requests/new">+ 新規作成</NuxtLink>
+    </nav>
+
+    <!-- ロール切り替え（MVP用） -->
     <div style="margin: 12px 0;">
       <label>
         ロール：
@@ -37,12 +56,10 @@ const onClickTransition = (requestId: string, next: RequestStatus) => {
         :key="r.id"
         style="margin-bottom: 16px;"
       >
+        <!-- タイトルは詳細へ -->
         <div>
           <strong>
-            <!-- 一覧→詳細への導線 -->
-            <NuxtLink :to="`/requests/${r.id}`">
-              {{ r.title }}
-            </NuxtLink>
+            <NuxtLink :to="`/requests/${r.id}`">{{ r.title }}</NuxtLink>
           </strong>
         </div>
 
@@ -52,9 +69,9 @@ const onClickTransition = (requestId: string, next: RequestStatus) => {
 
         <!-- この申請で“できる操作” -->
         <div style="margin-top: 8px;">
-          <template v-if="nextStatuses(r.status).length">
+          <template v-if="getNextStatuses(r.status).length">
             <button
-              v-for="next in nextStatuses(r.status)"
+              v-for="next in getNextStatuses(r.status)"
               :key="next"
               style="margin-right: 8px;"
               @click="onClickTransition(r.id, next)"
