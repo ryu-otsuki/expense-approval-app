@@ -25,19 +25,38 @@ export const STATUS_LABEL: Record<RequestStatus, string> = {
 export const STATUS_TRANSITIONS: Record<Role, Record<RequestStatus, RequestStatus[]>> = {
   applicant: {
     draft: ['submitted'],
-    submitted: [], // 申請者は申請後は触れない想定（必要なら後で調整）
+    submitted: [],
     approved: [],
     rejected: [],
   },
   approver: {
-    draft: [], // 承認者は下書きに触れない
+    draft: [],
     submitted: ['approved', 'rejected'],
     approved: [],
     rejected: [],
   },
 }
 
-// 編集できるかどうか（業務ルール）
+/**
+ * 指定ロール/状態で「次に遷移できる状態一覧」を返す
+ * UI側はこれを使ってボタン表示を決める（業務ルールをUIに散らさない）
+ */
+export const getNextStatuses = (role: Role, status: RequestStatus): readonly RequestStatus[] => {
+  return STATUS_TRANSITIONS[role][status]
+}
+
+/**
+ * draftのみ編集可能（Issue #23 のルール）
+ * UI側で status === 'draft' を直書きしないための関数
+ */
 export const canEdit = (status: RequestStatus): boolean => {
+  return status === 'draft'
+}
+
+/**
+ * draftのみ削除可能（Issue #24 のルール）
+ * UI側で status === 'draft' を直書きしないための関数
+ */
+export const canDelete = (status: RequestStatus): boolean => {
   return status === 'draft'
 }
