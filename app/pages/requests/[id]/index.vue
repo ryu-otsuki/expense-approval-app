@@ -1,35 +1,40 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute, useRouter } from '#imports'
+import { useRoute } from 'vue-router'
 import { STATUS_LABEL, canEdit, canDelete } from '~/domain/request'
 import { useRequests } from '~/composables/useRequests'
+import { useAuthMock } from '#imports'
 
 const route = useRoute()
-const router = useRouter()
-
 const id = computed(() => String(route.params.id))
-const { getById, deleteById } = useRequests()
+
+const { getById, deleteDraft } = useRequests()
+const { role } = useAuthMock()
 
 const request = computed(() => getById(id.value))
 
-const canShowEdit = computed(() =>
-  request.value ? canEdit(request.value.status) : false
-)
-const canShowDelete = computed(() =>
-  request.value ? canDelete(request.value.status) : false
-)
+const canShowEdit = computed(() => {
+  if (!request.value) return false
+  return canEdit(role.value, request.value.status)
+})
 
-const onClickDelete = async () => {
+const canShowDelete = computed(() => {
+  if (!request.value) return false
+  return canDelete(role.value, request.value.status)
+})
+
+const onDelete = () => {
   if (!request.value) return
-  const ok = confirm('この申請を削除しますか？（下書きのみ削除可能）')
-  if (!ok) return
+  const okConfirm = confirm('この申請を削除しますか？（下書きのみ削除可能）')
+  if (!okConfirm) return
 
-  const deleted = deleteById(request.value.id)
-  if (!deleted) {
-    alert('削除できませんでした')
+  const ok = deleteDraft(request.value.id)
+  if (!ok) {
+    alert('削除できませんでした（下書き以外 or 見つからない）')
     return
   }
-  await router.push('/requests')
+
+  navigateTo('/requests')
 }
 </script>
 
@@ -49,51 +54,24 @@ const onClickDelete = async () => {
         <div>作成日: {{ request.createdAt }}</div>
       </div>
 
-      <!-- 操作エリア -->
-      <div
-        style="
-          margin-top: 16px;
-          display: flex;
-          gap: 12px;
-          align-items: center;
-        "
-      >
-        <!-- 主操作：編集 -->
-        <NuxtLink
-          v-if="canShowEdit"
-          :to="`/requests/${id}/edit`"
-          style="text-decoration: underline;"
-        >
+      <div style="margin-top: 12px; display:flex; gap:8px;">
+        <NuxtLink v-if="canShowEdit" :to="`/requests/${request.id}/edit`">
           編集する
         </NuxtLink>
 
-        <!-- 破壊操作：削除（控えめ） -->
-        <button
-          v-if="canShowDelete"
-          @click="onClickDelete"
-          style="
-            color: #b00020;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-          "
-        >
+        <button v-if="canShowDelete" type="button" @click="onDelete">
           削除する
         </button>
-
-        <!-- 操作不可の理由表示 -->
-        <span
-          v-if="!canShowEdit && !canShowDelete"
-          style="opacity: 0.7;"
-        >
-          ※ 下書き以外は編集・削除できません
-        </span>
       </div>
+
+      <p v-if="!canShowEdit && request.status === 'draft'" style="opacity:0.8; margin-top:8px;">
+        ※ 現在のRoleでは編集できません
+      </p>
     </div>
 
     <div v-else style="margin-top: 12px; opacity: 0.8;">
       <p>この申請は見つかりません（id: {{ id }}）</p>
-      <p>URLが正しいか確認してください。</p>
+      <p style="opacity: 0.8;">URLが正しいか確認してください。</p>
     </div>
   </div>
 </template>

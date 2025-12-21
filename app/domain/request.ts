@@ -45,18 +45,12 @@ export const getNextStatuses = (role: Role, status: RequestStatus): readonly Req
   return STATUS_TRANSITIONS[role][status]
 }
 
-/**
- * draftのみ編集可能（Issue #23 のルール）
- * UI側で status === 'draft' を直書きしないための関数
- */
-export const canEdit = (status: RequestStatus): boolean => {
-  return status === 'draft'
+export const canEdit = (role: Role, status: RequestStatus): boolean => {
+  // MVP: draft は申請者のみ編集可、承認者は編集不可
+  return role === 'applicant' && status === 'draft'
 }
 
-/**
- * draftのみ削除可能（Issue #24 のルール）
- * UI側で status === 'draft' を直書きしないための関数
- */
-export const canDelete = (status: RequestStatus): boolean => {
-  return status === 'draft'
+export const canDelete = (role: Role, status: RequestStatus): boolean => {
+  // MVP: draft は申請者のみ削除可
+  return role === 'applicant' && status === 'draft'
 }
