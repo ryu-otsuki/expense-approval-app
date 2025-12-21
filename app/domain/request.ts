@@ -36,3 +36,8 @@ export const STATUS_TRANSITIONS: Record<Role, Record<RequestStatus, RequestStatu
     rejected: [],
   },
 }
+
+// 編集できるかどうか（業務ルール）
+export const canEdit = (status: RequestStatus): boolean => {
+  return status === 'draft'
+}
