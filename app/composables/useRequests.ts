@@ -1,25 +1,31 @@
-// app/composables/useRequests.ts
-import type { ExpenseRequest, RequestStatus, Role } from '~/domain/request'
-import { STATUS_TRANSITIONS } from '~/domain/request'
 import { mockRequests } from '~/mocks/requests'
+import type { ExpenseRequest, RequestStatus } from '~/domain/request'
+import { STATUS_TRANSITIONS } from '~/domain/request'
 
 export const useRequests = () => {
+  // useState でアプリ全体の共有状態にする
   const requests = useState<ExpenseRequest[]>('requests', () => [...mockRequests])
 
-  // UIから呼ぶ「更新API（モック）」を用意
-  const updateStatus = (requestId: string, next: RequestStatus, role: Role) => {
-    const target = requests.value.find(r => r.id === requestId)
+  const getById = (id: string): ExpenseRequest | undefined => {
+    return requests.value.find((r) => r.id === id)
+  }
+
+  // status更新（モック更新：UIに反映させるため）
+  const updateStatus = (id: string, next: RequestStatus) => {
+    const target = requests.value.find((r) => r.id === id)
     if (!target) return
-
-    // 遷移ルールに従う（不正なら何もしない）
-    const allowed = STATUS_TRANSITIONS[role][target.status]
-    if (!allowed.includes(next)) return
-
     target.status = next
+  }
+
+  // 「今のロールなら次に何へ遷移できるか」を返す
+  const getNextStatuses = (role: keyof typeof STATUS_TRANSITIONS, status: RequestStatus) => {
+    return STATUS_TRANSITIONS[role][status]
   }
 
   return {
     requests,
+    getById,
     updateStatus,
+    getNextStatuses,
   }
 }
