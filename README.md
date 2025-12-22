@@ -1,38 +1,90 @@
 # Expense Approval App (MVP)
 
-経費申請・承認フローを題材にした、Nuxt 3 + TypeScript の学習用MVPアプリです。  
-UI実装だけでなく、**ドメインモデル・状態遷移・ロールによる操作制御**を意識した設計を重視しています。
+経費申請・承認フローを題材にした、Nuxt 3 + TypeScript の学習用 MVP アプリです。
 
-本リポジトリは「完成品」を目的とせず、  
-**業務アプリをどう分解し、どう設計して実装するか**が伝わることを目的としています。
+UIの見た目や機能数よりも、  
+**業務アプリをどう分解し、どこにルールを置き、どう変更に強く設計するか**  
+を重視しています。
 
----
-
-## 概要
-申請者が経費を申請し、承認者が内容を確認・承認／却下する、  
-業務アプリでよくある構造を最小構成（MVP）で再現しています。
-
-現在は API や DB は未接続で、  
-モックデータを用いた UI 表示・操作確認までを実装しています。
+本リポジトリは「完成品」ではなく、  
+**設計と実装をセットで説明できること**を目的としています（面接・レビュー想定）。
 
 ---
 
-## 実装済み機能
-- Home ページ（`/`）
-- 申請一覧ページ（`/requests`）
-- 経費申請のドメインモデル定義
-- 申請ステータス管理（draft / submitted / approved / rejected）
-- ステータス日本語ラベルの型安全な管理
-- ロール（申請者 / 承認者）ごとの操作出し分け（モック）
-- Issue / Pull Request ベースの開発フロー
+## 1. Purpose / Scope（目的とスコープ）
+
+このアプリでは、業務アプリでよくある以下の構造を最小構成で扱います。
+
+- 申請者が経費を作成・提出する
+- 承認者が申請を承認／却下する
+- 状態やロールによって、可能な操作が変わる
+
+一方で、以下は **意図的にスコープ外** としています。
+
+- 実DBとの接続
+- 認証・認可の本実装
+- UIデザインの作り込み
+
+まずは  
+**「設計 → ドメイン定義 → UI反映」**  
+という流れを明確にすることを優先しています。
 
 ---
 
-## 設計方針
+## 2. App Overview（アプリ概要）
 
-### ドメインと UI の分離
-申請の状態・ロール・状態遷移ルールは `app/domain` に集約し、  
-UI 側はそれを参照するだけの構成にしています。
+- フロントエンドのみで構成された SPA
+- API / DB はモック実装
+- 状態遷移・権限制御を中心に設計
+
+現在は以下を確認できます。
+
+- 状態に応じて表示される操作が変わる
+- ロールによって実行できる操作が変わる
+- UI側に業務ルールを持たない構成
+
+---
+
+## 3. Screens & Routing（画面とルーティング）
+
+| 画面 | パス | 内容 |
+|----|----|----|
+| Home | `/` | アプリ概要 |
+| 申請一覧 | `/requests` | 申請の一覧表示 |
+| 申請詳細 | `/requests/:id` | 内容確認・操作 |
+| 申請作成 | `/requests/new` | 下書き作成 |
+| 申請編集 | `/requests/:id/edit` | 下書きのみ編集可 |
+
+画面は **状態を表示するだけ** に留め、  
+「何ができるか」の判断はドメイン側に委ねています。
+
+---
+
+## 4. Domain Model（ドメインモデル）
+
+### Request（経費申請）
+```ts
+type ExpenseRequest = {
+  id: string
+  title: string
+  amountYen: number
+  status: RequestStatus
+  createdAt: string
+}
+```
+### Role（操作主体）
+- applicant：申請者
+- approver：承認者
+
+### Status（状態）
+- draft
+- submitted
+- approved
+- rejected
+
+## 5. Status Transition（状態遷移設計）
+
+状態遷移は ロール × 現在ステータス で定義しています。
 
 ```ts
 export const STATUS_TRANSITIONS = {
@@ -51,74 +103,70 @@ export const STATUS_TRANSITIONS = {
 } as const
 ```
 
-これにより以下を実現しています。
+### 設計意図
+- UI に if 文で業務ルールを書かない
+- 状態遷移の全体像を1か所で把握できる
+- 将来の状態追加・ロール追加に対応しやすい
 
-- 業務ルールが UI に散らばらない
-- 状態やロール追加時の影響範囲を限定できる
-- UI 実装前に設計を固められる
+UI は「次に遷移できる状態の一覧」を受け取ってボタンを描画するだけの責務にしています。
 
----
+## 6. Authorization & Rules（権限・操作ルール）
 
-## 状態遷移の扱い（現在はモック）
+編集・削除などの操作可否も、ドメイン側の関数として定義しています。
 
-ロールごとに「次に遷移できる状態」を定義し、  
-UI はその定義を元に操作可能なボタンのみを表示しています。
-
-実際の状態更新処理や API 連携は未実装で、  
-設計と UI 表現の確認を優先しています。
-
----
-
-## ディレクトリ構成（抜粋）
-
-```txt
-app/
-├─ domain/
-│  └─ request.ts
-├─ mocks/
-│  └─ requests.ts
-├─ pages/
-│  ├─ index.vue
-│  └─ requests/
-│     └─ index.vue
-└─ app.vue
+```ts
+canEdit(role, status)
+canDelete(role, status)
 ```
-## 技術スタック
+これにより、
+- UIで権限制御ロジックが散らばらない
+- API実装時も同じルールを再利用できる
+- テストしやすい構造になる
 
-- Nuxt 3
-- Vue 3（Composition API / script setup）
-- TypeScript
-- GitHub Issues / Pull Requests / Projects
+というメリットがあります。
 
----
 
-## 開発フロー
+## 7. Data Flow（データフロー）
+```ts
+UI (pages)
+  ↓
+Composable (useRequests)
+  ↓
+API (server/api)
+  ↓
+Store (in-memory mock)
+```
 
-- Issue を起点にブランチ作成
-- 1 Issue = 1 Pull Request を基本
+### ポイント
+- UI は API の詳細を知らない
+- API を差し替えても UI はほぼ変更不要
+- UIを触らずにAPI差し替えできる構成
+
+この構造により、将来的に 実API / DB に移行する前提の設計 になっています。
+
+## 8. Testing & CI（テストとCI）
+- 状態遷移ルールはテストで検証
+- GitHub Actions で CI 実行
+- ルール変更時に破壊的変更を検知可能
+
+## 9. Development Flow（開発フロー）
+- Issue 起点で設計・実装
+- 1 Issue = 1 Pull Request
 - PR マージ時に Issue をクローズ
 - GitHub Projects（Kanban）で進捗管理
 
----
+設計意図が Issue / PR に残ることを重視しています。
 
-## 起動方法
-
-```bash
+## 10. Setup（起動方法）
+```ts
 npm install
 npm run dev
 ```
-ブラウザで以下にアクセスします。
+http://localhost:3000 にアクセス。
 
-http://localhost:3000
-
-## 今後の拡張予定
-
-- ステータス更新処理の実装
-
-- ロール切り替え（ログイン想定）
-
-- API / バックエンド連携
-
-- バリデーション
-
+## 11. Future Improvements（今後の拡張）
+- 実API / DB 接続
+- 認証・認可の実装
+- バリデーション強化
+- エラーハンドリング整理
 - UI / CSS の整理
