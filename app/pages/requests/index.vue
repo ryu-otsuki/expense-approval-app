@@ -8,7 +8,8 @@ import {
   type RequestStatus,
 } from '~/domain/request'
 
-const { getAll, updateStatus } = useRequests()
+const { getAll, updateStatus, ensureLoaded } = useRequests()
+await ensureLoaded()
 const { role } = useAuthMock()
 
 const requests = computed(() => getAll())

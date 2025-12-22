@@ -8,7 +8,8 @@ import { useAuthMock } from '#imports'
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 
-const { getById, deleteDraft } = useRequests()
+const { getById, deleteDraft, ensureLoaded } = useRequests()
+await ensureLoaded()
 const { role } = useAuthMock()
 
 const request = computed(() => getById(id.value))
