@@ -8,8 +8,9 @@ import {
   type RequestStatus,
 } from '~/domain/request'
 
-const { getAll, updateStatus, ensureLoaded } = useRequests()
+const { getAll, updateStatus, ensureLoaded, error } = useRequests()
 await ensureLoaded()
+
 const { role } = useAuthMock()
 
 const requests = computed(() => getAll())
@@ -18,11 +19,29 @@ const getNextStatuses = (status: RequestStatus): readonly RequestStatus[] => {
   return STATUS_TRANSITIONS[role.value][status]
 }
 
-const onClickTransition = (requestId: string, next: RequestStatus) => {
-  const ok = updateStatus(requestId, next)
-  if (!ok) {
+const onClickTransition = async (requestId: string, next: RequestStatus) => {
+  const ok = await updateStatus(requestId, next)
+
+  if (ok) return
+
+  // #27: NotFound / Forbidden / Conflict を区別して扱う
+  const type = error.value?.type
+
+  if (type === 'NotFound') {
     alert(`対象の申請が見つかりませんでした (id=${requestId})`)
+    return
   }
+  if (type === 'Forbidden') {
+    alert('この操作を行う権限がありません')
+    return
+  }
+  if (type === 'Conflict') {
+    alert('ルール上この操作はできません（状態遷移が不正です）')
+    return
+  }
+
+  // 想定外
+  alert(error.value?.message ?? 'エラーが発生しました')
 }
 </script>
 

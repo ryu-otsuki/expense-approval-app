@@ -1,14 +1,16 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useRequests } from '~/composables/useRequests'
 
 const router = useRouter()
-const { createDraft } = useRequests()
+const { createDraft, error: reqError } = useRequests()
 
 const title = ref('')
 const amountYen = ref<number | null>(null)
 const error = ref('')
 
-const onSubmit = () => {
+const onSubmit = async () => {
   error.value = ''
 
   const t = title.value.trim()
@@ -24,10 +26,19 @@ const onSubmit = () => {
     return
   }
 
-  const created = createDraft({ title: t, amountYen: a })
-
-  // 作成後は一覧へ（もしくは詳細へでもOK）
-  router.push('/requests')
+  try {
+    await createDraft({ title: t, amountYen: a })
+    // 作成後は一覧へ（詳細へ飛ばしたいなら createDraft の戻り値を使う）
+    router.push('/requests')
+  } catch {
+    const type = reqError.value?.type
+    if (type === 'Forbidden') {
+      error.value = 'この操作を行う権限がありません'
+      return
+    }
+    // NotFound/Conflict は通常ここでは起きにくいが、一応拾う
+    error.value = reqError.value?.message ?? '作成に失敗しました'
+  }
 }
 </script>
 
