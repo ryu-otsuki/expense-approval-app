@@ -8,8 +8,9 @@ import { useAuthMock } from '#imports'
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 
-const { getById, updateDraft, ensureLoaded } = useRequests()
+const { getById, updateDraft, ensureLoaded, error: reqError } = useRequests()
 await ensureLoaded()
+
 const { role } = useAuthMock()
 
 const request = computed(() => getById(id.value))
@@ -30,7 +31,7 @@ watchEffect(() => {
 
 const error = ref<string>('')
 
-const onSubmit = () => {
+const onSubmit = async () => {
   error.value = ''
 
   if (!request.value) {
@@ -50,13 +51,28 @@ const onSubmit = () => {
     return
   }
 
-  const ok = updateDraft(request.value.id, {
+  const ok = await updateDraft(request.value.id, {
     title: title.value.trim(),
     amountYen: amountYen.value,
   })
 
   if (!ok) {
-    error.value = '更新できませんでした（下書き以外 or 見つからない）'
+    const type = reqError.value?.type
+
+    if (type === 'NotFound') {
+      error.value = '申請が見つかりません'
+      return
+    }
+    if (type === 'Forbidden') {
+      error.value = 'この操作を行う権限がありません'
+      return
+    }
+    if (type === 'Conflict') {
+      error.value = '下書き（draft）のみ編集できます'
+      return
+    }
+
+    error.value = reqError.value?.message ?? '更新できませんでした'
     return
   }
 

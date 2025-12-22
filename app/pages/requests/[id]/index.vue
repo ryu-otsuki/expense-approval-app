@@ -8,8 +8,9 @@ import { useAuthMock } from '#imports'
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 
-const { getById, deleteDraft, ensureLoaded } = useRequests()
+const { getById, deleteDraft, ensureLoaded, error } = useRequests()
 await ensureLoaded()
+
 const { role } = useAuthMock()
 
 const request = computed(() => getById(id.value))
@@ -24,14 +25,31 @@ const canShowDelete = computed(() => {
   return canDelete(role.value, request.value.status)
 })
 
-const onDelete = () => {
+const onDelete = async () => {
   if (!request.value) return
+
   const okConfirm = confirm('この申請を削除しますか？（下書きのみ削除可能）')
   if (!okConfirm) return
 
-  const ok = deleteDraft(request.value.id)
+  const ok = await deleteDraft(request.value.id)
+
   if (!ok) {
-    alert('削除できませんでした（下書き以外 or 見つからない）')
+    const type = error.value?.type
+
+    if (type === 'NotFound') {
+      alert('対象の申請が見つかりませんでした')
+      return
+    }
+    if (type === 'Forbidden') {
+      alert('この操作を行う権限がありません')
+      return
+    }
+    if (type === 'Conflict') {
+      alert('下書き以外は削除できません')
+      return
+    }
+
+    alert(error.value?.message ?? '削除できませんでした')
     return
   }
 
