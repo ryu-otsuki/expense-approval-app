@@ -1,7 +1,9 @@
 import { RequestsStore } from '../../data/requests.store'
-import { getNextStatuses } from '~/domain/request'
 import type { Role, RequestStatus } from '~/domain/request'
 import { http404, http409 } from '../../utils/httpErrors'
+import { requestService } from '~/domain/services/requestService'
+
+const { getAvailableTransitions } = requestService
 
 type PatchBody = {
   role: Role
@@ -17,9 +19,8 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<PatchBody>(event)
 
-  // 状態遷移があるなら、domainのルールで判定
   if (body.nextStatus) {
-    const allowed = getNextStatuses(body.role, found.status)
+    const allowed = getAvailableTransitions(body.role, found.status)
     if (!allowed.includes(body.nextStatus)) {
       throw http409('Invalid status transition')
     }
@@ -31,7 +32,6 @@ export default defineEventHandler(async (event) => {
     ...(body.nextStatus ? { status: body.nextStatus } : {}),
   })
 
-  // patch側でも念のため（競合や並行を想定）
   if (!updated) throw http404('Request not found')
 
   return updated

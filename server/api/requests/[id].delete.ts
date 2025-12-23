@@ -1,13 +1,14 @@
 import { RequestsStore } from '../../data/requests.store'
-import { canDelete } from '~/domain/request'
 import type { Role } from '~/domain/request'
 import { http404, http403 } from '../../utils/httpErrors'
+import { requestService } from '~/domain/services/requestService'
 
 export default defineEventHandler((event) => {
   const id = getRouterParam(event, 'id') ?? ''
   const found = RequestsStore.get(id)
   if (!found) throw http404('Request not found')
 
+  const { canDelete } = requestService
   const role = (getQuery(event).role as Role) || 'applicant'
   if (!canDelete(role, found.status)) throw http403('Forbidden')
 

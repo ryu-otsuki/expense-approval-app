@@ -16,7 +16,6 @@ const onSubmit = async () => {
   const t = title.value.trim()
   const a = amountYen.value
 
-  // 最低限バリデーション
   if (!t) {
     error.value = 'タイトルを入力してください'
     return
@@ -28,7 +27,6 @@ const onSubmit = async () => {
 
   try {
     await createDraft({ title: t, amountYen: a })
-    // 作成後は一覧へ（詳細へ飛ばしたいなら createDraft の戻り値を使う）
     router.push('/requests')
   } catch {
     const type = reqError.value?.type
@@ -36,7 +34,6 @@ const onSubmit = async () => {
       error.value = 'この操作を行う権限がありません'
       return
     }
-    // NotFound/Conflict は通常ここでは起きにくいが、一応拾う
     error.value = reqError.value?.message ?? '作成に失敗しました'
   }
 }

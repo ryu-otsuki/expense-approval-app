@@ -20,7 +20,6 @@ const onClickTransition = async (requestId: string, next: RequestStatus) => {
 
   if (ok) return
 
-  // #27: NotFound / Forbidden / Conflict を区別して扱う
   const type = error.value?.type
 
   if (type === 'NotFound') {
@@ -36,7 +35,6 @@ const onClickTransition = async (requestId: string, next: RequestStatus) => {
     return
   }
 
-  // 想定外
   alert(error.value?.message ?? 'エラーが発生しました')
 }
 </script>

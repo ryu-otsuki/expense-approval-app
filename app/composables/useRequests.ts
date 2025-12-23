@@ -1,7 +1,7 @@
 import type { ExpenseRequest, RequestStatus, Role } from '~/domain/request'
 import type { DomainError } from '~/domain/error'
 import { notFound, forbidden, conflict } from '~/domain/error'
-import { useAuthMock } from '~/composables/useAuthMock' // ここはあなたの実装に合わせてパス調整
+import { useAuthMock } from '~/composables/useAuthMock'
 
 type CreateDraftInput = {
   title: string
@@ -13,7 +13,6 @@ type UpdateDraftInput = {
   amountYen: number
 }
 
-// $fetch が投げてくるエラーっぽい形（最低限）
 type FetchErrorLike = {
   statusCode?: number
   status?: number
@@ -26,15 +25,12 @@ const asFetchErrorLike = (e: unknown): FetchErrorLike => {
 }
 
 export const useRequests = () => {
-  // 共有状態（UIはここだけ見ればOK）
   const requests = useState<ExpenseRequest[]>('requests', () => [])
   const loaded = useState<boolean>('requestsLoaded', () => false)
 
   const loading = useState<boolean>('requestsLoading', () => false)
   const error = useState<DomainError | null>('requestsError', () => null)
 
-  // role（モック認証）
-  // 前提（推測）：useAuthMock が role: Ref<Role> を持つ
   const auth = useAuthMock()
   const currentRole = computed<Role>(() => auth.role?.value ?? 'applicant')
 
@@ -58,24 +54,20 @@ export const useRequests = () => {
       loaded.value = true
     } catch (e: unknown) {
       error.value = toDomainError(e)
-      // loaded は立てない（再試行できるように）
       throw e
     } finally {
       loading.value = false
     }
   }
 
-  // UIをほぼ触らないための「初回ロード保証」
   const ensureLoaded = async (): Promise<void> => {
     if (loaded.value) return
     await fetchAll()
   }
 
-  // UI互換：同期で使える getter
   const getAll = () => requests.value
   const getById = (id: string) => requests.value.find((r) => r.id === id)
 
-  // POST /api/requests（draft作成）
   const createDraft = async (input: CreateDraftInput): Promise<ExpenseRequest> => {
     error.value = null
     try {
@@ -83,7 +75,6 @@ export const useRequests = () => {
         method: 'POST',
         body: input,
       })
-      // 追加を反映（APIが返したものを信じる）
       requests.value = [created, ...requests.value]
       return created
     } catch (e: unknown) {
@@ -92,7 +83,6 @@ export const useRequests = () => {
     }
   }
 
-  // PATCH /api/requests/:id（status更新）
   const updateStatus = async (id: string, next: RequestStatus): Promise<boolean> => {
     error.value = null
     const current = getById(id)
@@ -110,7 +100,6 @@ export const useRequests = () => {
         },
       })
 
-      // 配列を差し替えてリアクティブに反映
       requests.value = requests.value.map((r) => (r.id === id ? updated : r))
       return true
     } catch (e: unknown) {
@@ -119,8 +108,6 @@ export const useRequests = () => {
     }
   }
 
-  // PATCH /api/requests/:id（draftの内容更新）
-  // ※「draftのみ編集可」は UI じゃなく composable 側で守る方針（現状維持）
   const updateDraft = async (id: string, input: UpdateDraftInput): Promise<boolean> => {
     error.value = null
     const current = getById(id)
@@ -174,20 +161,13 @@ export const useRequests = () => {
   }
 
   return {
-    // state
     requests,
     loading,
     error,
-
-    // load
     fetchAll,
     ensureLoaded,
-
-    // getters
     getAll,
     getById,
-
-    // commands
     createDraft,
     updateStatus,
     updateDraft,
