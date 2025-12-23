@@ -47,12 +47,12 @@ UIの見た目や機能数よりも、
 
 ## 3. Screens & Routing（画面とルーティング）
 
-| 画面 | パス | 内容 |
-|----|----|----|
-| Home | `/` | アプリ概要 |
-| 申請一覧 | `/requests` | 申請の一覧表示 |
-| 申請詳細 | `/requests/:id` | 内容確認・操作 |
-| 申請作成 | `/requests/new` | 下書き作成 |
+| 画面     | パス                 | 内容             |
+| -------- | -------------------- | ---------------- |
+| Home     | `/`                  | アプリ概要       |
+| 申請一覧 | `/requests`          | 申請の一覧表示   |
+| 申請詳細 | `/requests/:id`      | 内容確認・操作   |
+| 申請作成 | `/requests/new`      | 下書き作成       |
 | 申請編集 | `/requests/:id/edit` | 下書きのみ編集可 |
 
 画面は **状態を表示するだけ** に留め、  
@@ -63,6 +63,7 @@ UIの見た目や機能数よりも、
 ## 4. Domain Model（ドメインモデル）
 
 ### Request（経費申請）
+
 ```ts
 type ExpenseRequest = {
   id: string
@@ -72,11 +73,14 @@ type ExpenseRequest = {
   createdAt: string
 }
 ```
+
 ### Role（操作主体）
+
 - applicant：申請者
 - approver：承認者
 
 ### Status（状態）
+
 - draft
 - submitted
 - approved
@@ -104,6 +108,7 @@ export const STATUS_TRANSITIONS = {
 ```
 
 ### 設計意図
+
 - UI に if 文で業務ルールを書かない
 - 状態遷移の全体像を1か所で把握できる
 - 将来の状態追加・ロール追加に対応しやすい
@@ -118,15 +123,17 @@ UI は「次に遷移できる状態の一覧」を受け取ってボタンを�
 canEdit(role, status)
 canDelete(role, status)
 ```
+
 これにより、
+
 - UIで権限制御ロジックが散らばらない
 - API実装時も同じルールを再利用できる
 - テストしやすい構造になる
 
 というメリットがあります。
 
-
 ## 7. Data Flow（データフロー）
+
 ```ts
 UI (pages)
   ↓
@@ -138,6 +145,7 @@ Store (in-memory mock)
 ```
 
 ### ポイント
+
 - UI は API の詳細を知らない
 - API を差し替えても UI はほぼ変更不要
 - UIを触らずにAPI差し替えできる構成
@@ -145,11 +153,13 @@ Store (in-memory mock)
 この構造により、将来的に 実API / DB に移行する前提の設計 になっています。
 
 ## 8. Testing & CI（テストとCI）
+
 - 状態遷移ルールはテストで検証
 - GitHub Actions で CI 実行
 - ルール変更時に破壊的変更を検知可能
 
 ## 9. Development Flow（開発フロー）
+
 - Issue 起点で設計・実装
 - 1 Issue = 1 Pull Request
 - PR マージ時に Issue をクローズ
@@ -158,13 +168,23 @@ Store (in-memory mock)
 設計意図が Issue / PR に残ることを重視しています。
 
 ## 10. Setup（起動方法）
+
 ```ts
 npm install
 npm run dev
 ```
+
 http://localhost:3000 にアクセス。
 
-## 11. Future Improvements（今後の拡張）
+## 11. Lint / Format
+
+```bash
+npm run lint
+npm run format
+```
+
+## 12. Future Improvements（今後の拡張）
+
 - 実API / DB 接続
 - 認証・認可の実装
 - バリデーション強化

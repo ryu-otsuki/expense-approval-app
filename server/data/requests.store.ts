@@ -28,7 +28,7 @@ export const RequestsStore = {
   },
 
   get(id: string): ExpenseRequest | undefined {
-    return requests.find(r => r.id === id)
+    return requests.find((r) => r.id === id)
   },
 
   createDraft(input: CreateInput): ExpenseRequest {
@@ -44,7 +44,7 @@ export const RequestsStore = {
   },
 
   patch(id: string, input: PatchInput): ExpenseRequest | undefined {
-    const current = requests.find(r => r.id === id)
+    const current = requests.find((r) => r.id === id)
     if (!current) return undefined
 
     // 最小限：来たものだけ反映
@@ -57,7 +57,7 @@ export const RequestsStore = {
 
   remove(id: string): boolean {
     const before = requests.length
-    requests = requests.filter(r => r.id !== id)
+    requests = requests.filter((r) => r.id !== id)
     return requests.length !== before
   },
 }

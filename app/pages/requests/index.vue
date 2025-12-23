@@ -2,11 +2,7 @@
 import { computed } from 'vue'
 import { useRequests } from '~/composables/useRequests'
 import { useAuthMock } from '#imports'
-import {
-  STATUS_LABEL,
-  STATUS_TRANSITIONS,
-  type RequestStatus,
-} from '~/domain/request'
+import { STATUS_LABEL, STATUS_TRANSITIONS, type RequestStatus } from '~/domain/request'
 
 const { getAll, updateStatus, ensureLoaded, error } = useRequests()
 await ensureLoaded()
@@ -49,11 +45,11 @@ const onClickTransition = async (requestId: string, next: RequestStatus) => {
   <div>
     <h2>申請一覧</h2>
 
-    <p style="margin: 8px 0;">
+    <p style="margin: 8px 0">
       <NuxtLink to="/requests/new">+ 新規作成</NuxtLink>
     </p>
 
-    <div v-for="r in requests" :key="r.id" style="margin: 18px 0;">
+    <div v-for="r in requests" :key="r.id" style="margin: 18px 0">
       <div>
         <NuxtLink :to="`/requests/${r.id}`">
           <strong>{{ r.title }}</strong>
@@ -64,7 +60,7 @@ const onClickTransition = async (requestId: string, next: RequestStatus) => {
       <div>状態: {{ STATUS_LABEL[r.status] }}</div>
       <div>作成日: {{ r.createdAt }}</div>
 
-      <div style="margin-top: 8px; display:flex; gap:8px; flex-wrap:wrap;">
+      <div style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap">
         <button
           v-for="next in getNextStatuses(r.status)"
           :key="next"
