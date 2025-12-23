@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import { STATUS_LABEL, canEdit } from '~/domain/request'
+import { STATUS_LABEL } from '~/domain/request'
 import { useRequests } from '~/composables/useRequests'
 import { useAuthMock } from '#imports'
+import { requestService } from '~/domain/services/requestService'
 
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 
 const { getById, updateDraft, ensureLoaded, error: reqError } = useRequests()
 await ensureLoaded()
+
+const { canEdit } = requestService
 
 const { role } = useAuthMock()
 

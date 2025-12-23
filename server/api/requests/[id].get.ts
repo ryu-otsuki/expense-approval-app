@@ -1,4 +1,3 @@
-// server/api/requests/[id].get.ts
 import { RequestsStore } from '../../data/requests.store'
 import { http404 } from '../../utils/httpErrors'
 

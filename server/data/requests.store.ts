@@ -12,7 +12,6 @@ type PatchInput = Partial<{
   status: RequestStatus
 }>
 
-// メモリ上のDB（サーバー再起動で初期化される）
 let requests: ExpenseRequest[] = [...mockRequests]
 
 const formatYYYYMMDD = (d = new Date()) => {
@@ -47,7 +46,6 @@ export const RequestsStore = {
     const current = requests.find((r) => r.id === id)
     if (!current) return undefined
 
-    // 最小限：来たものだけ反映
     if (typeof input.title === 'string') current.title = input.title
     if (typeof input.amountYen === 'number') current.amountYen = input.amountYen
     if (typeof input.status === 'string') current.status = input.status
