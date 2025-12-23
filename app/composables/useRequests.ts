@@ -137,7 +137,6 @@ export const useRequests = () => {
     }
   }
 
-  // DELETE /api/requests/:id（draftのみ削除）
   const deleteDraft = async (id: string): Promise<boolean> => {
     error.value = null
     const current = getById(id)

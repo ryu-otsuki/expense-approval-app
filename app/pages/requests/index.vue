@@ -2,7 +2,8 @@
 import { computed } from 'vue'
 import { useRequests } from '~/composables/useRequests'
 import { useAuthMock } from '#imports'
-import { STATUS_LABEL, STATUS_TRANSITIONS, type RequestStatus } from '~/domain/request'
+import { STATUS_LABEL, type RequestStatus } from '~/domain/request'
+import { requestService } from '~/domain/services/requestService'
 
 const { getAll, updateStatus, ensureLoaded, error } = useRequests()
 await ensureLoaded()
@@ -12,7 +13,7 @@ const { role } = useAuthMock()
 const requests = computed(() => getAll())
 
 const getNextStatuses = (status: RequestStatus): readonly RequestStatus[] => {
-  return STATUS_TRANSITIONS[role.value][status]
+  return requestService.getAvailableTransitions(role.value, status)
 }
 
 const onClickTransition = async (requestId: string, next: RequestStatus) => {

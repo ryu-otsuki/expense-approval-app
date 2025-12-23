@@ -8,9 +8,8 @@ export default defineEventHandler((event) => {
   const found = RequestsStore.get(id)
   if (!found) throw http404('Request not found')
 
-  const { canDelete } = requestService
   const role = (getQuery(event).role as Role) || 'applicant'
-  if (!canDelete(role, found.status)) throw http403('Forbidden')
+  if (!requestService.canDelete(role, found.status)) throw http403('Forbidden')
 
   const removed = RequestsStore.remove(id)
   if (!removed) throw http404('Request not found')
