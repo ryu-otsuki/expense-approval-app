@@ -7,7 +7,7 @@ export type ExpenseRequest = {
   title: string
   amountYen: number
   status: RequestStatus
-  createdAt: string 
+  createdAt: string
 }
 
 export const STATUS_LABEL: Record<RequestStatus, string> = {
