@@ -13,6 +13,18 @@ type UpdateDraftInput = {
   amountYen: number
 }
 
+// $fetch が投げてくるエラーっぽい形（最低限）
+type FetchErrorLike = {
+  statusCode?: number
+  status?: number
+  message?: string
+}
+
+const asFetchErrorLike = (e: unknown): FetchErrorLike => {
+  if (typeof e === 'object' && e !== null) return e as FetchErrorLike
+  return {}
+}
+
 export const useRequests = () => {
   // 共有状態（UIはここだけ見ればOK）
   const requests = useState<ExpenseRequest[]>('requests', () => [])
@@ -26,12 +38,15 @@ export const useRequests = () => {
   const auth = useAuthMock()
   const currentRole = computed<Role>(() => auth.role?.value ?? 'applicant')
 
-  const toDomainError = (e: any): DomainError => {
-    const status = e?.statusCode ?? e?.status
+  const toDomainError = (e: unknown): DomainError => {
+    const err = asFetchErrorLike(e)
+    const status = err.statusCode ?? err.status
+
     if (status === 404) return notFound('Request not found')
     if (status === 403) return forbidden('Forbidden')
     if (status === 409) return conflict('Invalid status transition')
-    return conflict(e?.message ?? 'Unexpected error')
+
+    return conflict(err.message ?? 'Unexpected error')
   }
 
   const fetchAll = async (): Promise<void> => {
@@ -41,7 +56,7 @@ export const useRequests = () => {
       const data = await $fetch<ExpenseRequest[]>('/api/requests')
       requests.value = data
       loaded.value = true
-    } catch (e: any) {
+    } catch (e: unknown) {
       error.value = toDomainError(e)
       // loaded は立てない（再試行できるように）
       throw e
@@ -71,7 +86,7 @@ export const useRequests = () => {
       // 追加を反映（APIが返したものを信じる）
       requests.value = [created, ...requests.value]
       return created
-    } catch (e: any) {
+    } catch (e: unknown) {
       error.value = toDomainError(e)
       throw e
     }
@@ -98,7 +113,7 @@ export const useRequests = () => {
       // 配列を差し替えてリアクティブに反映
       requests.value = requests.value.map((r) => (r.id === id ? updated : r))
       return true
-    } catch (e: any) {
+    } catch (e: unknown) {
       error.value = toDomainError(e)
       return false
     }
@@ -129,7 +144,7 @@ export const useRequests = () => {
 
       requests.value = requests.value.map((r) => (r.id === id ? updated : r))
       return true
-    } catch (e: any) {
+    } catch (e: unknown) {
       error.value = toDomainError(e)
       return false
     }
@@ -152,7 +167,7 @@ export const useRequests = () => {
       await $fetch(`/api/requests/${id}?role=${currentRole.value}`, { method: 'DELETE' })
       requests.value = requests.value.filter((r) => r.id !== id)
       return true
-    } catch (e: any) {
+    } catch (e: unknown) {
       error.value = toDomainError(e)
       return false
     }

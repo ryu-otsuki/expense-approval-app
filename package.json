@@ -21,6 +21,7 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@nuxt/eslint": "^1.12.1",
     "@nuxt/eslint-config": "^1.12.1",
     "@vitest/coverage-v8": "^4.0.16",
     "eslint": "^9.39.2",

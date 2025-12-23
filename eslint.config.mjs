@@ -1,10 +1,3 @@
-import nuxt from '@nuxt/eslint-config'
+import withNuxt from './.nuxt/eslint.config.mjs'
 
-export default [
-  ...nuxt(),
-  {
-    rules: {
-      'no-console': 'off',
-    },
-  },
-]
+export default await withNuxt()
