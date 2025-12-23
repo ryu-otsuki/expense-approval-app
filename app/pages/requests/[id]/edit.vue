@@ -84,33 +84,31 @@ const onSubmit = async () => {
   <div>
     <h2>申請編集</h2>
 
-    <p style="margin: 8px 0;">
+    <p style="margin: 8px 0">
       <NuxtLink :to="`/requests/${id}`">← 詳細へ戻る</NuxtLink>
     </p>
 
-    <div v-if="!request" style="opacity:0.8;">
-      見つかりません（id: {{ id }}）
-    </div>
+    <div v-if="!request" style="opacity: 0.8">見つかりません（id: {{ id }}）</div>
 
     <div v-else>
-      <p style="opacity:0.8;">現在の状態: {{ STATUS_LABEL[request.status] }}</p>
+      <p style="opacity: 0.8">現在の状態: {{ STATUS_LABEL[request.status] }}</p>
 
-      <div v-if="!editable" style="margin-top:12px; opacity:0.8;">
+      <div v-if="!editable" style="margin-top: 12px; opacity: 0.8">
         下書き（draft）のみ編集できます。
       </div>
 
-      <form v-else style="margin-top:12px;" @submit.prevent="onSubmit">
-        <div style="margin-bottom:8px;">
+      <form v-else style="margin-top: 12px" @submit.prevent="onSubmit">
+        <div style="margin-bottom: 8px">
           <label>タイトル</label><br />
-          <input v-model="title" type="text" style="width: 320px;" />
+          <input v-model="title" type="text" style="width: 320px" />
         </div>
 
-        <div style="margin-bottom:8px;">
+        <div style="margin-bottom: 8px">
           <label>金額</label><br />
-          <input v-model.number="amountYen" type="number" min="1" style="width: 160px;" />
+          <input v-model.number="amountYen" type="number" min="1" style="width: 160px" />
         </div>
 
-        <p v-if="error" style="color:#d33;">{{ error }}</p>
+        <p v-if="error" style="color: #d33">{{ error }}</p>
 
         <button type="submit">保存</button>
       </form>

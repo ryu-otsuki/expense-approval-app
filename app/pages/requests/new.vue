@@ -46,28 +46,26 @@ const onSubmit = async () => {
   <div>
     <h2>申請作成</h2>
 
-    <p style="margin: 8px 0;">
+    <p style="margin: 8px 0">
       <NuxtLink to="/requests">← 一覧へ戻る</NuxtLink>
     </p>
 
-    <form @submit.prevent="onSubmit" style="display: grid; gap: 12px; max-width: 420px;">
-      <label style="display: grid; gap: 6px;">
+    <form @submit.prevent="onSubmit" style="display: grid; gap: 12px; max-width: 420px">
+      <label style="display: grid; gap: 6px">
         <span>タイトル</span>
         <input v-model="title" type="text" placeholder="例: 書籍購入（業務改善）" />
       </label>
 
-      <label style="display: grid; gap: 6px;">
+      <label style="display: grid; gap: 6px">
         <span>金額（円）</span>
         <input v-model.number="amountYen" type="number" min="1" step="1" placeholder="例: 3200" />
       </label>
 
-      <p v-if="error" style="margin: 0; color: #d33;">
+      <p v-if="error" style="margin: 0; color: #d33">
         {{ error }}
       </p>
 
-      <button type="submit">
-        下書き（draft）として作成
-      </button>
+      <button type="submit">下書き（draft）として作成</button>
     </form>
   </div>
 </template>

@@ -58,7 +58,7 @@ export const useRequests = () => {
 
   // UI互換：同期で使える getter
   const getAll = () => requests.value
-  const getById = (id: string) => requests.value.find(r => r.id === id)
+  const getById = (id: string) => requests.value.find((r) => r.id === id)
 
   // POST /api/requests（draft作成）
   const createDraft = async (input: CreateDraftInput): Promise<ExpenseRequest> => {
@@ -96,7 +96,7 @@ export const useRequests = () => {
       })
 
       // 配列を差し替えてリアクティブに反映
-      requests.value = requests.value.map(r => (r.id === id ? updated : r))
+      requests.value = requests.value.map((r) => (r.id === id ? updated : r))
       return true
     } catch (e: any) {
       error.value = toDomainError(e)
@@ -127,7 +127,7 @@ export const useRequests = () => {
         },
       })
 
-      requests.value = requests.value.map(r => (r.id === id ? updated : r))
+      requests.value = requests.value.map((r) => (r.id === id ? updated : r))
       return true
     } catch (e: any) {
       error.value = toDomainError(e)
@@ -150,7 +150,7 @@ export const useRequests = () => {
 
     try {
       await $fetch(`/api/requests/${id}?role=${currentRole.value}`, { method: 'DELETE' })
-      requests.value = requests.value.filter(r => r.id !== id)
+      requests.value = requests.value.filter((r) => r.id !== id)
       return true
     } catch (e: any) {
       error.value = toDomainError(e)
