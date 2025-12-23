@@ -12,15 +12,13 @@ const id = computed(() => String(route.params.id))
 const { getById, updateDraft, ensureLoaded, error: reqError } = useRequests()
 await ensureLoaded()
 
-const { canEdit } = requestService
-
 const { role } = useAuthMock()
 
 const request = computed(() => getById(id.value))
 
 const editable = computed(() => {
   if (!request.value) return false
-  return canEdit(role.value, request.value.status)
+  return requestService.canEdit(role.value, request.value.status)
 })
 
 const title = ref('')

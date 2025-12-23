@@ -12,20 +12,18 @@ const id = computed(() => String(route.params.id))
 const { getById, deleteDraft, ensureLoaded, error } = useRequests()
 await ensureLoaded()
 
-const { canEdit, canDelete } = requestService
-
 const { role } = useAuthMock()
 
 const request = computed(() => getById(id.value))
 
 const canShowEdit = computed(() => {
   if (!request.value) return false
-  return canEdit(role.value, request.value.status)
+  return requestService.canEdit(role.value, request.value.status)
 })
 
 const canShowDelete = computed(() => {
   if (!request.value) return false
-  return canDelete(role.value, request.value.status)
+  return requestService.canDelete(role.value, request.value.status)
 })
 
 const onDelete = async () => {

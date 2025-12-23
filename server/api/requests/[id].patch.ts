@@ -3,8 +3,6 @@ import type { Role, RequestStatus } from '~/domain/request'
 import { http404, http409 } from '../../utils/httpErrors'
 import { requestService } from '~/domain/services/requestService'
 
-const { getAvailableTransitions } = requestService
-
 type PatchBody = {
   role: Role
   nextStatus?: RequestStatus
@@ -20,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<PatchBody>(event)
 
   if (body.nextStatus) {
-    const allowed = getAvailableTransitions(body.role, found.status)
+    const allowed = requestService.getAvailableTransitions(body.role, found.status)
     if (!allowed.includes(body.nextStatus)) {
       throw http409('Invalid status transition')
     }
