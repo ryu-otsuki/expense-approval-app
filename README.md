@@ -115,6 +115,54 @@ export const STATUS_TRANSITIONS = {
 
 UI は「次に遷移できる状態の一覧」を受け取ってボタンを描画するだけの責務にしています。
 
+
+
+## アーキテクチャ（レイヤ分離）
+
+このアプリは、業務アプリ開発で重要になる「責務の分離」を学ぶために、以下のレイヤで構成しています。
+
+- **UI（pages/components）**
+  - 表示とユーザー操作（クリック、入力、遷移）だけを担当
+  - **業務ルールは持たない**
+  - **データ取得や更新は composable を経由する**
+
+- **Application Layer（composables）**
+  - UI から使われる “窓口”
+  - 以下を担当する
+    - 状態（state）の保持（`useState`）
+    - API 呼び出し（`$fetch` / API client）
+    - UI が使いやすい形への整形（例：読み込み保証、エラー正規化）
+  - **業務ルール判断（可否判定・遷移判定）は domain/service に寄せる**
+
+- **Domain（domain / domain/services）**
+  - 業務の用語（型）とルール（判断）を担当
+  - Nuxt / Vue / HTTP / DB などの技術依存を持たない（純TS）
+  - 例：
+    - Role / Status / Request の定義
+    - 状態遷移の可否判定、編集/削除可否の判定
+
+- **API（server/api）**
+  - HTTP の入口
+  - リクエストを受け、domain/service に判断を委譲し、結果を返す
+  - NotFound / Forbidden / Conflict などの HTTP エラーへ変換する
+
+### データフロー（基本）
+UI は composable だけを見ることで動きます。
+
+`UI → composable → domain/service → API → (store)`
+
+- UI：ボタン押下・フォーム入力
+- composable：state 更新 / API 呼び出し / エラー整形
+- domain/service：業務的に正しいかを判断
+- API：HTTP として返す（ステータスコード・レスポンス）
+
+### 例（業務ルールは domain/service に閉じる）
+- 「このロールでこの状態から遷移できるか？」
+- 「draft 以外は編集できない」
+- 「承認者は削除できない」
+
+これらは UI/composable に散らさず、domain/service の関数で一元管理します。
+
 ## 6. Authorization & Rules（権限・操作ルール）
 
 編集・削除などの操作可否も、ドメイン側の関数として定義しています。
